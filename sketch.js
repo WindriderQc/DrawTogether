@@ -5,6 +5,8 @@ let socket;
 let messages;
 let formChat;
 let input;
+let strokeColor = '#000000';
+const backgroundColor = '#969696';
 
 const strokeWidth = 24
 
@@ -15,7 +17,7 @@ function setup()
   
     
   
-    background(150)
+    background(backgroundColor)
 
     messages = document.getElementById('messages');
     formChat = document.getElementById('formChat');
@@ -47,6 +49,46 @@ function setup()
 
     socket.on('mouse', alienDrawing)
     //socket.on('iss', (data) => { console.log('ISS location:', data) })
+
+    const colorPicker = document.getElementById('colorPicker');
+    colorPicker.addEventListener('input', (event) => {
+        strokeColor = event.target.value;
+    });
+
+    const eraser = document.getElementById('eraser');
+    eraser.addEventListener('click', () => {
+        strokeColor = backgroundColor;
+    });
+
+    const clearCanvas = document.getElementById('clearCanvas');
+    clearCanvas.addEventListener('click', () => {
+        socket.emit('clearCanvas');
+        background(backgroundColor);
+    });
+
+    socket.on('clearCanvas', () => {
+        background(backgroundColor);
+    });
+
+    const saveCanvas = document.getElementById('saveCanvas');
+    saveCanvas.addEventListener('click', () => {
+        const email = prompt("Please enter your email address:");
+        if (email) {
+            const canvas = document.querySelector('canvas');
+            const dataURL = canvas.toDataURL();
+            fetch('/api/alert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    dest: email,
+                    msg: 'Here is your saved canvas!',
+                    image64: dataURL,
+                }),
+            });
+        }
+    });
 } 
 
 function draw() 
@@ -58,19 +100,20 @@ function mouseDragged()
 {
     let data = {
         x: mouseX, 
-        y: mouseY
+        y: mouseY,
+        color: strokeColor
     }
 
     socket.emit('mouse', data)
     noStroke()
-    fill(255)
+    fill(strokeColor)
     ellipse(mouseX, mouseY, strokeWidth, strokeWidth)
 }
 
 function alienDrawing(data) 
 {
     noStroke()
-    fill(255,0,100);
+    fill(data.color);
     ellipse(data.x, data.y, strokeWidth, strokeWidth)
 
 }
