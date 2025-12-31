@@ -8,16 +8,16 @@ let input;
 let strokeColor = '#000000';
 const backgroundColor = '#969696';
 
-const strokeWidth = 24
+let currentStrokeWidth = 10;
 
 function setup() 
 { 
-    let canvas = createCanvas(640, 480);
-    canvas.parent('canvas'); // Set the parent of the canvas to the div with id 'canvas'
+    // Create responsive canvas
+    let canvas = createCanvas(windowWidth, windowHeight);
+    canvas.parent('canvas');
+    canvas.style('display', 'block');
   
-    
-  
-    background(backgroundColor)
+    background(backgroundColor);
 
     messages = document.getElementById('messages');
     formChat = document.getElementById('formChat');
@@ -38,7 +38,6 @@ function setup()
         }
     });
       
-   
     socket.on('chat message', function(msg) {
         console.log('message: ', msg);
         let item = document.createElement('li');
@@ -47,12 +46,16 @@ function setup()
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    socket.on('mouse', alienDrawing)
-    //socket.on('iss', (data) => { console.log('ISS location:', data) })
+    socket.on('mouse', alienDrawing);
 
     const colorPicker = document.getElementById('colorPicker');
     colorPicker.addEventListener('input', (event) => {
         strokeColor = event.target.value;
+    });
+
+    const brushSize = document.getElementById('brushSize');
+    brushSize.addEventListener('input', (event) => {
+        currentStrokeWidth = parseInt(event.target.value);
     });
 
     const eraser = document.getElementById('eraser');
@@ -86,10 +89,23 @@ function setup()
                     msg: 'Here is your saved canvas!',
                     image64: dataURL,
                 }),
-            });
+            }).catch(err => console.error('Error sending email:', err));
         }
     });
+
+    const downloadCanvas = document.getElementById('downloadCanvas');
+    downloadCanvas.addEventListener('click', () => {
+        saveCanvas('myCanvas.jpg');
+    });
 } 
+
+function windowResized() {
+    // Preserve the current drawing
+    let img = get();
+    resizeCanvas(windowWidth, windowHeight);
+    background(backgroundColor);
+    image(img, 0, 0);
+}
 
 function draw() 
 { 
@@ -101,28 +117,30 @@ function mouseDragged()
     let data = {
         x: mouseX, 
         y: mouseY,
-        color: strokeColor
+        px: pmouseX,
+        py: pmouseY,
+        color: strokeColor,
+        width: currentStrokeWidth
     }
 
-    socket.emit('mouse', data)
-    noStroke()
-    fill(strokeColor)
-    ellipse(mouseX, mouseY, strokeWidth, strokeWidth)
+    socket.emit('mouse', data);
+
+    stroke(strokeColor);
+    strokeWeight(currentStrokeWidth);
+    line(pmouseX, pmouseY, mouseX, mouseY);
 }
 
 function alienDrawing(data) 
 {
-    noStroke()
-    fill(data.color);
-    ellipse(data.x, data.y, strokeWidth, strokeWidth)
-
+    stroke(data.color);
+    strokeWeight(data.width || 10); // Default if not provided
+    // Use data.px if available, otherwise just points (fallback to dots if no previous point sent)
+    if (data.px !== undefined && data.py !== undefined) {
+        line(data.px, data.py, data.x, data.y);
+    } else {
+        // Fallback for old clients or if packet structure differs
+        noStroke();
+        fill(data.color);
+        ellipse(data.x, data.y, data.width || 10, data.width || 10);
+    }
 }
-
-
-
-
-
-
-
- 
-          

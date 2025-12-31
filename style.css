@@ -5,4 +5,11 @@
     padding: 10px;
     background-color: rgba(0, 0, 0, 0.5);
     border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#toolbar button, #toolbar input {
+    cursor: pointer;
 }

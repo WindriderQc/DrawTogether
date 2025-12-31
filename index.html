@@ -30,9 +30,11 @@
         <h4>Any user connected to this page can draw and chat simultaneously.  No database used therefore content is ephemere</h4>
         <div id="toolbar">
             <input type="color" id="colorPicker" value="#000000">
+            <input type="range" id="brushSize" min="1" max="50" value="10" title="Brush Size">
             <button id="eraser">Eraser</button>
             <button id="clearCanvas">Clear</button>
-            <button id="saveCanvas">Save</button>
+            <button id="saveCanvas" title="Email Canvas">Email</button>
+            <button id="downloadCanvas" title="Download Image">Download</button>
         </div>
         <div id="canvas"></div>
         <ul id="messages"></ul>
